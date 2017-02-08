@@ -309,6 +309,8 @@ public class OnlineServiceImpl implements OnlineService {
 		List<Map> mapProduct = new ArrayList<Map>();
 		// mapData代表data
 		List<Map> mapData = new ArrayList<Map>();
+		// mapDataCount代表合计
+				List<Map> mapDataCount = new ArrayList<Map>();
 		// 最后的list
 		List<Map> mapsum = new ArrayList<Map>();
 		if (lists.size() > 0) {
@@ -365,8 +367,8 @@ public class OnlineServiceImpl implements OnlineService {
 				}
 				
 			}
-
-			mapda.put("grandtotal", mapCount1);
+			mapDataCount.add(mapCount1);
+			mapda.put("grandtotal", mapDataCount);
 
 			// 拼接查询数据data的json
 			// 多日数据json
@@ -388,7 +390,7 @@ public class OnlineServiceImpl implements OnlineService {
 								"yyyy-MM-dd");
 						String str = sdf.format(st1);
 						mapdata.put(str, mapdata1);
-						st = DateHandler.GetAfterDay(st1, 1);
+						st1 = DateHandler.GetAfterDay(st1, 1);
 					} else if (period == 3) {
 
 						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
