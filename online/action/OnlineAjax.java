@@ -29,6 +29,10 @@ public class OnlineAjax extends AjaxBaseAction {
 	private String result;
 	private String quotas;
 	private int period;
+	private int syear;
+	private int smonth;
+	private int eyear;
+	private int emonth;
 	@Resource
 	private quotasService quotasServiceImpl;
 	@Resource
@@ -82,13 +86,8 @@ public class OnlineAjax extends AjaxBaseAction {
 					period);
 		}
 		if(period==3){
-			this.result ="";
-//			onlineServiceImpl.getOnlineMonth(syear, smonth,
-//					eyear, emonth, quota, period);
-		
+			this.result =onlineServiceImpl.getOnlineMonth(syear, smonth,eyear, emonth, quota, period);
 		}
-
-		// this.result = this.onlineServiceImpl.getOnlineSingleDay(st,quota, 1);
 		return SUCCESS;
 	}
 
@@ -137,4 +136,36 @@ public class OnlineAjax extends AjaxBaseAction {
 		this.quotas = quotas;
 	}
 
+	public int getSyear() {
+		return syear;
+	}
+
+	public int getSmonth() {
+		return smonth;
+	}
+
+	public int getEyear() {
+		return eyear;
+	}
+
+	public int getEmonth() {
+		return emonth;
+	}
+
+	public void setSyear(int syear) {
+		this.syear = syear;
+	}
+
+	public void setSmonth(int smonth) {
+		this.smonth = smonth;
+	}
+
+	public void setEyear(int eyear) {
+		this.eyear = eyear;
+	}
+
+	public void setEmonth(int emonth) {
+		this.emonth = emonth;
+	}
+	
 }
