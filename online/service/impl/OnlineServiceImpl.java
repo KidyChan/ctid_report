@@ -66,13 +66,15 @@ public class OnlineServiceImpl implements OnlineService {
 		}
 
 		List lists = this.getData(start, indexs);
-		String str = this.buildSingleDayJSON(lists, indexs);
+		List countList = new ArrayList();
+		countList=this.getCount(start, indexs);
+		String str = this.buildSingleDayJSON(lists,countList, indexs,start);
 
 		return str;
 
 	}
 
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings({ "rawtypes" , "unchecked"})
 	@Override
 	public String getOnlineMutiDay(Date start, Date end, List<Integer> indexs,
 			int period) {
@@ -98,12 +100,13 @@ public class OnlineServiceImpl implements OnlineService {
 				instlist = this.inList(list);
 			}
 			lists.add(instlist);
-			st = DateHandler.GetAfterDay(st, 1);
-			List count = this.getCount(start, indexs);
+			
+			List count = this.getCount(st, indexs);
 			for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
 				countList.add(((Object[]) (count.get(0)))[i]);
 			}
 			countNum++;
+			st = DateHandler.GetAfterDay(st, 1);
 		}
 		String resultHtml = this.buildMutiDayJSON(lists, countList, start,
 				period, indexs, countNum);
@@ -111,7 +114,7 @@ public class OnlineServiceImpl implements OnlineService {
 
 	}
 
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public String getOnlineMonth(int startYear, int startMonth, int endYear,
 			int endMonth, List<Integer> indexs, int period) {
@@ -206,7 +209,7 @@ public class OnlineServiceImpl implements OnlineService {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String buildSingleDayJSON(List lists, List<Integer> indexs) {
+	public String buildSingleDayJSON(List lists, List countList,List<Integer> indexs,Date start) {
 
 		List<Quotas> quotas = this.quotasServiceImpl.getQuotasIndexs(indexs);
 
@@ -245,6 +248,24 @@ public class OnlineServiceImpl implements OnlineService {
 
 			}
 			mapda.put("product", mapProduct);
+			
+			Map mapCount = new HashMap();
+			Map mapCount1 = new HashMap();
+			// 循环多天
+			Date st=start;
+				for (int j = 0; j < quotas.size(); j++) {
+					mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
+							countList.get(j));
+				}
+
+					SimpleDateFormat sdf = new SimpleDateFormat(
+							"yyyy-MM-dd");
+					String str = sdf.format(st);
+					mapCount1.put(str, mapCount);
+					st = DateHandler.GetAfterDay(st, 1);
+
+			mapda.put("grandtotal", mapCount1);
+			
 			// 拼接查询数据data的json
 			for (int i = 0; i < lists.size(); i++) {
 				Object[] sai = (Object[]) lists.get(i);
@@ -321,12 +342,13 @@ public class OnlineServiceImpl implements OnlineService {
 			Map mapCount = new HashMap();
 			Map mapCount1 = new HashMap();
 			// 循环多天
+			Date st=start;
 			for (int i = 0; i < countNum; i++) {
 				for (int j = 0; j < quotas.size(); j++) {
 					mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
 							countList.get(quotas.size() * i + j));
 				}
-				Date st=start;
+//				Date st=start;
 				if (period == 2) {
 
 					SimpleDateFormat sdf = new SimpleDateFormat(
@@ -352,7 +374,7 @@ public class OnlineServiceImpl implements OnlineService {
 				Map mapdata = new HashMap();
 				mapdata.put("proId", ((Object[]) (listpro.get(i)))[1]);
 				Map mapdata1 = new HashMap();
-				Date st = start;
+				Date st1 = start;
 				// 多日数据拼接
 				for (int k = 0; k < lists.size(); k++) {
 					List twolist = (List) (lists.get(k)).get(i);
@@ -364,15 +386,15 @@ public class OnlineServiceImpl implements OnlineService {
 
 						SimpleDateFormat sdf = new SimpleDateFormat(
 								"yyyy-MM-dd");
-						String str = sdf.format(st);
+						String str = sdf.format(st1);
 						mapdata.put(str, mapdata1);
-						st = DateHandler.GetAfterDay(st, 1);
+						st = DateHandler.GetAfterDay(st1, 1);
 					} else if (period == 3) {
 
 						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
-						String str = sdf.format(st);
+						String str = sdf.format(st1);
 						mapdata.put(str, mapdata1);
-						st = DateHandler.GetAfterMonth(st, 1);
+						st = DateHandler.GetAfterMonth(st1, 1);
 					}
 				}
 
