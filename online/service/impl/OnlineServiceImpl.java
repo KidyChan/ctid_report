@@ -67,14 +67,14 @@ public class OnlineServiceImpl implements OnlineService {
 
 		List lists = this.getData(start, indexs);
 		List countList = new ArrayList();
-		countList=this.getCount(start, indexs);
-		String str = this.buildSingleDayJSON(lists,countList, indexs,start);
+		countList = this.getCount(start, indexs);
+		String str = this.buildSingleDayJSON(lists, countList, indexs, start);
 
 		return str;
 
 	}
 
-	@SuppressWarnings({ "rawtypes" , "unchecked"})
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public String getOnlineMutiDay(Date start, Date end, List<Integer> indexs,
 			int period) {
@@ -100,7 +100,7 @@ public class OnlineServiceImpl implements OnlineService {
 				instlist = this.inList(list);
 			}
 			lists.add(instlist);
-			
+
 			List count = this.getCount(st, indexs);
 			for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
 				countList.add(((Object[]) (count.get(0)))[i]);
@@ -209,7 +209,8 @@ public class OnlineServiceImpl implements OnlineService {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String buildSingleDayJSON(List lists, List countList,List<Integer> indexs,Date start) {
+	public String buildSingleDayJSON(List lists, List countList,
+			List<Integer> indexs, Date start) {
 
 		List<Quotas> quotas = this.quotasServiceImpl.getQuotasIndexs(indexs);
 
@@ -248,24 +249,23 @@ public class OnlineServiceImpl implements OnlineService {
 
 			}
 			mapda.put("product", mapProduct);
-			
+
 			Map mapCount = new HashMap();
 			Map mapCount1 = new HashMap();
 			// 循环多天
-			Date st=start;
-				for (int j = 0; j < quotas.size(); j++) {
-					mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
-							countList.get(j));
-				}
+			Date st = start;
+			for (int j = 0; j < quotas.size(); j++) {
+				mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
+						countList.get(j));
+			}
 
-					SimpleDateFormat sdf = new SimpleDateFormat(
-							"yyyy-MM-dd");
-					String str = sdf.format(st);
-					mapCount1.put(str, mapCount);
-					st = DateHandler.GetAfterDay(st, 1);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			String str = sdf.format(st);
+			mapCount1.put(str, mapCount);
+			st = DateHandler.GetAfterDay(st, 1);
 
 			mapda.put("grandtotal", mapCount1);
-			
+
 			// 拼接查询数据data的json
 			for (int i = 0; i < lists.size(); i++) {
 				Object[] sai = (Object[]) lists.get(i);
@@ -310,7 +310,7 @@ public class OnlineServiceImpl implements OnlineService {
 		// mapData代表data
 		List<Map> mapData = new ArrayList<Map>();
 		// mapDataCount代表合计
-				List<Map> mapDataCount = new ArrayList<Map>();
+		List<Map> mapDataCount = new ArrayList<Map>();
 		// 最后的list
 		List<Map> mapsum = new ArrayList<Map>();
 		if (lists.size() > 0) {
@@ -344,17 +344,16 @@ public class OnlineServiceImpl implements OnlineService {
 			Map mapCount = new HashMap();
 			Map mapCount1 = new HashMap();
 			// 循环多天
-			Date st=start;
+			Date st = start;
 			for (int i = 0; i < countNum; i++) {
 				for (int j = 0; j < quotas.size(); j++) {
 					mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
 							countList.get(quotas.size() * i + j));
 				}
-//				Date st=start;
+				// Date st=start;
 				if (period == 2) {
 
-					SimpleDateFormat sdf = new SimpleDateFormat(
-							"yyyy-MM-dd");
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 					String str = sdf.format(st);
 					mapCount1.put(str, mapCount);
 					st = DateHandler.GetAfterDay(st, 1);
@@ -365,7 +364,7 @@ public class OnlineServiceImpl implements OnlineService {
 					mapCount1.put(str, mapCount);
 					st = DateHandler.GetAfterMonth(st, 1);
 				}
-				
+
 			}
 			mapDataCount.add(mapCount1);
 			mapda.put("grandtotal", mapDataCount);
@@ -373,16 +372,22 @@ public class OnlineServiceImpl implements OnlineService {
 			// 拼接查询数据data的json
 			// 多日数据json
 			for (int i = 0; i < lists.get(0).size(); i++) {
-				Map mapdata = new HashMap();
+				Map mapdata = new LinkedHashMap();
 				mapdata.put("proId", ((Object[]) (listpro.get(i)))[1]);
-				Map mapdata1 = new HashMap();
+				// Map mapdata1 = new LinkedHashMap();
 				Date st1 = start;
 				// 多日数据拼接
 				for (int k = 0; k < lists.size(); k++) {
 					List twolist = (List) (lists.get(k)).get(i);
+					Map mapdata1 = new LinkedHashMap();
 					for (int j = 0; j < quotas.size(); j++) {
-						mapdata1.put(quotas.get(j).getQuotaReportNameId() + "",
-								twolist.get(j));
+						if (j == 7 || j == 8) {
+							mapdata1.put(quotas.get(j).getQuotaReportNameId()
+									+ "", twolist.get(j) + "%");
+						} else {
+							mapdata1.put(quotas.get(j).getQuotaReportNameId()
+									+ "", twolist.get(j));
+						}
 					}
 					if (period == 2) {
 
