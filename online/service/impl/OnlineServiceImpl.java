@@ -289,6 +289,23 @@ public class OnlineServiceImpl implements OnlineService {
 			Map map = new LinkedHashMap();
 			map.put("success", 0);
 			map.put("total", 0);
+			// 拼接返回json数据字符串
+			// mapQuotas代表quotas指标
+				map.put("success", 1);
+				map.put("total", lists.size());
+				map.put("message", "执行成功");
+				Map mapda = new HashMap();
+				// 拼接指标
+				for (int i = 0; i < quotas.size(); i++) {
+					Map mapquota = new HashMap();
+					mapquota.put("quotasNameId", quotas.get(i)
+							.getQuotaReportNameId());
+					mapquota.put("quotasName", quotas.get(i).getQuotaName());
+					mapQuotas.add(mapquota);
+
+				}
+				mapda.put("quotas", mapQuotas);
+				map.put("data", mapda);
 			map.put("message", "查询结果无数据！");
 			mapsum.add(map);
 		}
@@ -416,6 +433,18 @@ public class OnlineServiceImpl implements OnlineService {
 			Map map = new LinkedHashMap();
 			map.put("success", 0);
 			map.put("total", 0);
+			Map mapda = new HashMap();
+			// 拼接指标
+			for (int i = 0; i < quotas.size(); i++) {
+				Map mapquota = new HashMap();
+				mapquota.put("quotasNameId", quotas.get(i)
+						.getQuotaReportNameId());
+				mapquota.put("quotasName", quotas.get(i).getQuotaName());
+				mapQuotas.add(mapquota);
+
+			}
+			mapda.put("quotas", mapQuotas);
+			map.put("data", mapda);
 			map.put("message", "查询结果无数据！");
 			mapsum.add(map);
 		}
