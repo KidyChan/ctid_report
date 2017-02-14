@@ -102,8 +102,18 @@ public class OnlineServiceImpl implements OnlineService {
 			lists.add(instlist);
 
 			List count = this.getCount(st, indexs);
-			for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
-				countList.add(((Object[]) (count.get(0)))[i]);
+			if (indexs.size() == 1) {
+				countList.add(count.get(0));
+			} else {
+
+				if (!count.contains(null)) {
+
+					for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
+						countList.add(((Object[]) (count.get(0)))[i]);
+					}
+				} else {
+					countList = null;
+				}
 			}
 			countNum++;
 			st = DateHandler.GetAfterDay(st, 1);
@@ -148,9 +158,22 @@ public class OnlineServiceImpl implements OnlineService {
 			lists.add(instlist);
 
 			List count = this.getMonthCount(st, ed, indexs);
-			for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
-				countList.add(((Object[]) (count.get(0)))[i]);
+			if (indexs.size() == 1) {
+				countList.add(count.get(0));
+			} else {
+
+				if (!count.contains(null)) {
+
+					for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
+						countList.add(((Object[]) (count.get(0)))[i]);
+					}
+				} else {
+					countList = null;
+				}
 			}
+			// for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
+			// countList.add(((Object[]) (count.get(0)))[i]);
+			// }
 			st = DateHandler.GetAfterMonth(st, 1);
 			ed = DateHandler.GetAfterMonth(ed, 1);
 			countNum++;
@@ -291,21 +314,21 @@ public class OnlineServiceImpl implements OnlineService {
 			map.put("total", 0);
 			// 拼接返回json数据字符串
 			// mapQuotas代表quotas指标
-				map.put("success", 1);
-				map.put("total", lists.size());
-				map.put("message", "执行成功");
-				Map mapda = new HashMap();
-				// 拼接指标
-				for (int i = 0; i < quotas.size(); i++) {
-					Map mapquota = new HashMap();
-					mapquota.put("quotasNameId", quotas.get(i)
-							.getQuotaReportNameId());
-					mapquota.put("quotasName", quotas.get(i).getQuotaName());
-					mapQuotas.add(mapquota);
+			map.put("success", 1);
+			map.put("total", lists.size());
+			map.put("message", "执行成功");
+			Map mapda = new HashMap();
+			// 拼接指标
+			for (int i = 0; i < quotas.size(); i++) {
+				Map mapquota = new HashMap();
+				mapquota.put("quotasNameId", quotas.get(i)
+						.getQuotaReportNameId());
+				mapquota.put("quotasName", quotas.get(i).getQuotaName());
+				mapQuotas.add(mapquota);
 
-				}
-				mapda.put("quotas", mapQuotas);
-				map.put("data", mapda);
+			}
+			mapda.put("quotas", mapQuotas);
+			map.put("data", mapda);
 			map.put("message", "查询结果无数据！");
 			mapsum.add(map);
 		}
@@ -330,7 +353,7 @@ public class OnlineServiceImpl implements OnlineService {
 		List<Map> mapDataCount = new ArrayList<Map>();
 		// 最后的list
 		List<Map> mapsum = new ArrayList<Map>();
-		if (lists.size() > 0) {
+		if (lists.size() > 0 && !lists.contains(null)) {
 			Map map = new LinkedHashMap();
 			map.put("success", 1);
 			map.put("total", lists.size());
@@ -358,14 +381,25 @@ public class OnlineServiceImpl implements OnlineService {
 			mapda.put("product", mapProduct);
 
 			// 拼接合计列
-			Map mapCount = new HashMap();
+			// Map mapCount = new HashMap();
 			Map mapCount1 = new HashMap();
 			// 循环多天
 			Date st = start;
 			for (int i = 0; i < countNum; i++) {
+				Map mapCount = new HashMap();
 				for (int j = 0; j < quotas.size(); j++) {
-					mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
-							countList.get(quotas.size() * i + j));
+					/*
+					 * mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
+					 * countList.get(quotas.size() * i + j));
+					 */
+					if (quotas.get(j).getQuotaReportNameId() == 8
+							|| quotas.get(j).getQuotaReportNameId() == 9) {
+						mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
+								countList.get(quotas.size() * i + j) + "%");
+					} else {
+						mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
+								countList.get(quotas.size() * i + j));
+					}
 				}
 				// Date st=start;
 				if (period == 2) {
@@ -398,7 +432,8 @@ public class OnlineServiceImpl implements OnlineService {
 					List twolist = (List) (lists.get(k)).get(i);
 					Map mapdata1 = new LinkedHashMap();
 					for (int j = 0; j < quotas.size(); j++) {
-						if (j == 7 || j == 8) {
+						if (quotas.get(j).getQuotaReportNameId() == 8
+								|| quotas.get(j).getQuotaReportNameId() == 9) {
 							mapdata1.put(quotas.get(j).getQuotaReportNameId()
 									+ "", twolist.get(j) + "%");
 						} else {
@@ -466,31 +501,31 @@ public class OnlineServiceImpl implements OnlineService {
 	public List getCount(Date start, List<Integer> indexs) {
 		// 全部集合
 		StringBuffer sbf = new StringBuffer();
-		sbf.append(" SELECT ");
+		sbf.append("SELECT");
 		if (indexs.size() > 0) {
 			if (indexs.contains(1)) {
-				sbf.append(" T_STORE_USER, ");
+				sbf.append(" T_STORE_USER,");
 			}
 			if (indexs.contains(2)) {
-				sbf.append(" T_SALES_USER, ");
+				sbf.append(" T_SALES_USER,");
 			}
 			if (indexs.contains(3)) {
-				sbf.append(" T_BILL_USER, ");
+				sbf.append(" T_BILL_USER,");
 			}
 			if (indexs.contains(4)) {
-				sbf.append(" T_NEW_USER, ");
+				sbf.append(" T_NEW_USER,");
 			}
 			if (indexs.contains(5)) {
-				sbf.append(" T_CANCEL_USER, ");
+				sbf.append(" T_CANCEL_USER,");
 			}
 			if (indexs.contains(6)) {
-				sbf.append(" T_THREEDAY_CANCEL_USER, ");
+				sbf.append(" T_THREEDAY_CANCEL_USER,");
 			}
 			if (indexs.contains(7)) {
-				sbf.append(" T_INCREASE_USER, ");
+				sbf.append(" T_INCREASE_USER,");
 			}
 			if (indexs.contains(8)) {
-				sbf.append(" ROUND(T_CANCEL_USER*100/(T_STORE_USER+T_THREEDAY_CANCEL_USER),2) AS L_CANCEL_PERCENT, ");
+				sbf.append(" ROUND(T_CANCEL_USER*100/(T_STORE_USER+T_THREEDAY_CANCEL_USER),2) AS L_CANCEL_PERCENT,");
 			}
 			if (indexs.contains(9)) {
 				sbf.append(" ROUND(T_INCREASE_USER*100/T_NEW_USER,2) AS L_EXIST_PERCENT,");
@@ -523,37 +558,37 @@ public class OnlineServiceImpl implements OnlineService {
 		StringBuffer sbf = new StringBuffer();
 		String dayType = "yyyy-MM-dd";
 		SimpleDateFormat sdf1 = new SimpleDateFormat(dayType);
-		sbf.append(" SELECT ");
+		sbf.append("SELECT");
 		if (indexs.size() > 0) {
 			if (indexs.contains(1)) {
-				sbf.append(" ST, ");
+				sbf.append(" ST,");
 			}
 			if (indexs.contains(2)) {
-				sbf.append(" ORD, ");
+				sbf.append(" ORD,");
 			}
 			if (indexs.contains(3)) {
-				sbf.append(" BILL, ");
+				sbf.append(" BILL,");
 			}
 			if (indexs.contains(4)) {
-				sbf.append(" NEWCOME, ");
+				sbf.append(" NEWCOME,");
 			}
 			if (indexs.contains(5)) {
-				sbf.append(" CANCE, ");
+				sbf.append(" CANCE,");
 			}
 			if (indexs.contains(6)) {
-				sbf.append(" THREECANCE, ");
+				sbf.append(" THREECANCE,");
 			}
 			if (indexs.contains(7)) {
-				sbf.append(" INCOME, ");
+				sbf.append(" INCOME,");
 			}
 			if (indexs.contains(8)) {
 				sbf.append(" ROUND(CANCE*100/(ST+THREECANCE),2) AS L_CANCEL_PERCENT,");
 			}
 			if (indexs.contains(9)) {
-				sbf.append("ROUND(INCOME*100/NEWCOME, 2) AS L_EXIST_PERCENT,");
+				sbf.append(" ROUND(INCOME*100/NEWCOME, 2) AS L_EXIST_PERCENT,");
 			}
 			if (indexs.contains(10)) {
-				sbf.append("L_IN,");
+				sbf.append(" L_IN,");
 			}
 		}
 		sbf.deleteCharAt(sbf.length() - 1);
