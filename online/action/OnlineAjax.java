@@ -78,7 +78,7 @@ public class OnlineAjax extends AjaxBaseAction {
 		}
 
 		if(period==1){
-			this.result = onlineServiceImpl.getOnlineSingleDay(st, quota,
+			this.result = onlineServiceImpl.getOnlineMutiDay(st, ed,quota,
 					period);
 		}
 		if(period==2){

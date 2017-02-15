@@ -6,19 +6,14 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
 import javax.annotation.Resource;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.convention.annotation.Action;
-import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Result;
-
 import com.ctid.business.online.service.OnlineService;
 import com.ctid.business.quotas.service.quotasService;
 import com.ctid.core.base.BaseAction;
@@ -79,8 +74,9 @@ public class OnlineAction extends BaseAction {
 
 		switch (period) {
 		case 1:
-			this.title = buildSingleDayTitle(date);
-			return onlineServiceImpl.getOnlineSingleDay(date, quotaz, period);
+			this.title = buildMutiDayTitle(start, end);
+			return onlineServiceImpl.getOnlineMutiDay(start, end, quotaz,
+					period);
 		case 2:
 			this.title = buildMutiDayTitle(start, end);
 			return onlineServiceImpl.getOnlineMutiDay(start, end, quotaz,
@@ -230,24 +226,6 @@ private void myDataInit(){
 		for (int i = 1; i <= 12; i++) {
 			this.monthList.add(i);
 		}
-	}
-
-	/**
-	 * 构造单日查询结果标题
-	 * 
-	 * @param date
-	 *            查询日期
-	 * @return 标题字符串
-	 */
-	private String buildSingleDayTitle(Date date) {
-		Date end = DateHandler.GetAfterDay(date, 1);
-		end = DateHandler.GetAfterSecond(end, -1);
-
-		Date now = new Date();
-		if (end.after(now)) {
-			end = now;
-		}
-		return buildTitleString(date, end);
 	}
 
 	/**

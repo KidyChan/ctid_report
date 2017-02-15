@@ -11,15 +11,6 @@ import java.util.List;
 public interface OnlineService {
 
 
-	
-	/**
-	 * 获取在网总表单日查询统计结果
-	 * @param date 查询日期
-	 * @param indexs  指标
-	 * @return 数据表格html字符串
-	 */
-	public String getOnlineSingleDay(Date date, List<Integer> indexs,int period);
-	
 /**
  * 获取在网总表按日查询统计结果
  * @param start 查询起始日期
