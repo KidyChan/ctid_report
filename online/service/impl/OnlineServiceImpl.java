@@ -7,15 +7,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Resource;
-
-import net.sf.json.JSONArray;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
-
 import com.ctid.business.online.service.OnlineService;
 import com.ctid.business.quotas.service.quotasService;
 import com.ctid.core.exception.ServiceException;
@@ -40,39 +35,6 @@ public class OnlineServiceImpl implements OnlineService {
 	private IHibernateDaoSys dao;
 	@Resource
 	private quotasService quotasServiceImpl;
-	@SuppressWarnings("unused")
-	private int flag = 0;
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	public String getOnlineSingleDay(Date date, List<Integer> indexs, int period) {
-
-		Date start = date;
-
-		Date end = DateHandler.GetAfterDay(start, 1);
-
-		Date now = new Date();
-
-		if (now.before(end)) {
-
-			end = now;
-
-		} else {
-
-			end = DateHandler.GetAfterSecond(end, -1);
-		}
-		if (indexs.contains(10) && indexs.size() > 1) {
-			indexs.remove(indexs.size() - 1);
-		}
-
-		List lists = this.getData(start, indexs);
-		List countList = new ArrayList();
-		countList = this.getCount(start, indexs);
-		String str = this.buildSingleDayJSON(lists, countList, indexs, start);
-
-		return str;
-
-	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
@@ -86,28 +48,31 @@ public class OnlineServiceImpl implements OnlineService {
 		} else {
 			end = DateHandler.GetAfterSecond(end, -1);
 		}
+//		单日和多日查询指标中不含10（新增收入），剔除
 		if (indexs.contains(10) && indexs.size() > 1) {
 			indexs.remove(indexs.size() - 1);
 		}
+//		存储查询多日数据
 		List<List> lists = new ArrayList<List>();
+//		存储查询多日总计数据
 		List countList = new ArrayList();
 		List instlist = null;
 		Date st = start;
 		int countNum = 0;
 		while (st.before(end)) {
+//			获取查询周期内数据
 			List list = this.getData(st, indexs);
 			if (list.size() > 0) {
+//				处理查询结果，判断是否新增产品，新增的补0
 				instlist = this.inList(list);
 			}
 			lists.add(instlist);
-
+//          获取查询周期内总计数据
 			List count = this.getCount(st, indexs);
 			if (indexs.size() == 1) {
 				countList.add(count.get(0));
 			} else {
-
 				if (!count.contains(null)) {
-
 					for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
 						countList.add(((Object[]) (count.get(0)))[i]);
 					}
@@ -144,24 +109,27 @@ public class OnlineServiceImpl implements OnlineService {
 
 			end = DateHandler.GetAfterSecond(end, -1);
 		}
+//		存储查询多月数据
 		List<List> lists = new ArrayList<List>();
+//		存储查询多月总计数据
 		List countList = new ArrayList();
 		List instlist = null;
 		Date st = start;
 		int countNum = 0;
 		Date ed = DateHandler.GetAfterMonth(st, 1);
 		while (st.before(end)) {
+//			获取查询周期内数据
 			List list = this.getMonthData(st, ed, indexs, period);
 			if (list.size() > 0) {
+//				处理查询结果，判断是否新增产品，新增的补0
 				instlist = this.inList(list);
 			}
 			lists.add(instlist);
-
+//          获取查询周期内总计数据
 			List count = this.getMonthCount(st, ed, indexs);
 			if (indexs.size() == 1) {
 				countList.add(count.get(0));
 			} else {
-
 				if (!count.contains(null)) {
 
 					for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
@@ -171,9 +139,6 @@ public class OnlineServiceImpl implements OnlineService {
 					countList = null;
 				}
 			}
-			// for (int i = 0; i < ((Object[]) (count.get(0))).length; i++) {
-			// countList.add(((Object[]) (count.get(0)))[i]);
-			// }
 			st = DateHandler.GetAfterMonth(st, 1);
 			ed = DateHandler.GetAfterMonth(ed, 1);
 			countNum++;
@@ -181,10 +146,10 @@ public class OnlineServiceImpl implements OnlineService {
 		String resultHtml = this.buildMutiDayJSON(lists, countList, start,
 				period, indexs, countNum);
 		return resultHtml;
-
 	}
-
-	// 处理查询结果，判断是否新增产品，新增的补0
+	/*
+	 *  处理查询结果，判断是否新增产品，新增的补0
+	 *  */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<List> inList(List lists) {
 		List proList = this.getLie();
@@ -229,113 +194,6 @@ public class OnlineServiceImpl implements OnlineService {
 		}
 
 		return installList;
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String buildSingleDayJSON(List lists, List countList,
-			List<Integer> indexs, Date start) {
-
-		List<Quotas> quotas = this.quotasServiceImpl.getQuotasIndexs(indexs);
-
-		// 拼接返回json数据字符串
-		// mapQuotas代表quotas指标
-		List<Map> mapQuotas = new ArrayList<Map>();
-		// mapProduct代表产品json
-		List<Map> mapProduct = new ArrayList<Map>();
-		// mapData代表data
-		List<Map> mapData = new ArrayList<Map>();
-		// 最后的list
-		List<Map> mapsum = new ArrayList<Map>();
-		if (lists.size() > 0) {
-			Map map = new LinkedHashMap();
-			map.put("success", 1);
-			map.put("total", lists.size());
-			map.put("message", "执行成功");
-			Map mapda = new HashMap();
-			// 拼接指标
-			for (int i = 0; i < quotas.size(); i++) {
-				Map mapquota = new HashMap();
-				mapquota.put("quotasNameId", quotas.get(i)
-						.getQuotaReportNameId());
-				mapquota.put("quotasName", quotas.get(i).getQuotaName());
-				mapQuotas.add(mapquota);
-
-			}
-			mapda.put("quotas", mapQuotas);
-
-			// 拼接产品json
-			for (int i = 0; i < lists.size(); i++) {
-				Map mapprod = new HashMap();
-				mapprod.put("proId", ((Object[]) (lists.get(i)))[0]);
-				mapprod.put("proName", ((Object[]) (lists.get(i)))[1]);
-				mapProduct.add(mapprod);
-
-			}
-			mapda.put("product", mapProduct);
-
-			Map mapCount = new HashMap();
-			Map mapCount1 = new HashMap();
-			// 循环多天
-			Date st = start;
-			for (int j = 0; j < quotas.size(); j++) {
-				mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
-						countList.get(j));
-			}
-
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			String str = sdf.format(st);
-			mapCount1.put(str, mapCount);
-			st = DateHandler.GetAfterDay(st, 1);
-
-			mapda.put("grandtotal", mapCount1);
-
-			// 拼接查询数据data的json
-			for (int i = 0; i < lists.size(); i++) {
-				Object[] sai = (Object[]) lists.get(i);
-				Map mapdata = new HashMap();
-				mapdata.put("proId", sai[0]);
-				if (sai != null) {
-					for (int j = 0; j < quotas.size() - 1; j++) {
-
-						mapdata.put(quotas.get(j).getQuotaReportNameId() + "",
-								sai[j + 2]);
-
-					}
-				}
-				mapData.add(mapdata);
-			}
-			mapda.put("list", mapData);
-
-			map.put("data", mapda);
-			mapsum.add(map);
-		} else {
-			Map map = new LinkedHashMap();
-			map.put("success", 0);
-			map.put("total", 0);
-			// 拼接返回json数据字符串
-			// mapQuotas代表quotas指标
-			map.put("success", 1);
-			map.put("total", lists.size());
-			map.put("message", "执行成功");
-			Map mapda = new HashMap();
-			// 拼接指标
-			for (int i = 0; i < quotas.size(); i++) {
-				Map mapquota = new HashMap();
-				mapquota.put("quotasNameId", quotas.get(i)
-						.getQuotaReportNameId());
-				mapquota.put("quotasName", quotas.get(i).getQuotaName());
-				mapQuotas.add(mapquota);
-
-			}
-			mapda.put("quotas", mapQuotas);
-			map.put("data", mapda);
-			map.put("message", "查询结果无数据！");
-			mapsum.add(map);
-		}
-		net.sf.json.JSONArray result = net.sf.json.JSONArray.fromObject(mapsum);
-
-		return result.toString();
-
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -388,10 +246,6 @@ public class OnlineServiceImpl implements OnlineService {
 			for (int i = 0; i < countNum; i++) {
 				Map mapCount = new HashMap();
 				for (int j = 0; j < quotas.size(); j++) {
-					/*
-					 * mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
-					 * countList.get(quotas.size() * i + j));
-					 */
 					if (quotas.get(j).getQuotaReportNameId() == 8
 							|| quotas.get(j).getQuotaReportNameId() == 9) {
 						mapCount.put(quotas.get(j).getQuotaReportNameId() + "",
@@ -401,21 +255,17 @@ public class OnlineServiceImpl implements OnlineService {
 								countList.get(quotas.size() * i + j));
 					}
 				}
-				// Date st=start;
 				if (period == 2) {
-
 					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 					String str = sdf.format(st);
 					mapCount1.put(str, mapCount);
 					st = DateHandler.GetAfterDay(st, 1);
 				} else if (period == 3) {
-
 					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
 					String str = sdf.format(st);
 					mapCount1.put(str, mapCount);
 					st = DateHandler.GetAfterMonth(st, 1);
 				}
-
 			}
 			mapDataCount.add(mapCount1);
 			mapda.put("grandtotal", mapDataCount);
@@ -449,11 +299,10 @@ public class OnlineServiceImpl implements OnlineService {
 						mapdata.put(str, mapdata1);
 						st1 = DateHandler.GetAfterDay(st1, 1);
 					} else if (period == 3) {
-
 						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
 						String str = sdf.format(st1);
 						mapdata.put(str, mapdata1);
-						st = DateHandler.GetAfterMonth(st1, 1);
+						st1 = DateHandler.GetAfterMonth(st1, 1);
 					}
 				}
 
@@ -487,15 +336,6 @@ public class OnlineServiceImpl implements OnlineService {
 
 		return result.toString();
 	}
-
-	@SuppressWarnings("rawtypes")
-	public String buildOnlineResultMonthDayHTML(Date start, Date end,
-			List<List> lists, List<Integer> indexs, List lielist) {
-
-		JSONArray json = JSONArray.fromObject(lists);
-		return json.toString();
-	}
-
 	// 计算合计
 	@SuppressWarnings({ "rawtypes" })
 	public List getCount(Date start, List<Integer> indexs) {
@@ -542,11 +382,10 @@ public class OnlineServiceImpl implements OnlineService {
 		String sql = sbf.toString();
 		List listss = null;
 		try {
-
 			listss = dao.findBySql(sql, new Object[] { start });
-			// listss = dao.findBySql(sql, null);
 		} catch (ServiceException e) {
-			e.printStackTrace();
+			logger.error("查询C_ONLINEUSER_PRODUCT条件：start=" + start + ",indexs="
+					+ indexs + "异常！！");
 		}
 		return listss;
 	}
@@ -652,13 +491,15 @@ public class OnlineServiceImpl implements OnlineService {
 		List listss = null;
 		try {
 			listss = dao.findBySql(sql, null);
-			// listss = dao.findBySql(sql, null);
 		} catch (ServiceException e) {
-			e.printStackTrace();
+			logger.error("查询C_ONLINEUSER_PRODUCT条件：start=" + start + ",end="
+					+ end + ",indexs=" + indexs + "异常！！");
 		}
 		return listss;
 	}
-
+/*
+ * 查询周期内数据
+*/	
 	@SuppressWarnings({ "rawtypes" })
 	public List getData(Date start, List<Integer> indexs) {
 		// 全部集合
@@ -694,20 +535,19 @@ public class OnlineServiceImpl implements OnlineService {
 			}
 		}
 		sbf.append(" from C_ONLINEUSER_PRODUCT A WHERE   ");
-		// sbf.append(" A.T_GATHER_TIME = to_date('2016-10-05','yyyy-mm-dd')");
 		sbf.append(" A.T_GATHER_TIME = ? ");
 		sbf.append("  ORDER BY A.T_PRODUCT_NAME  ");
 		String sql = sbf.toString();
 		List listss = null;
 		try {
 			listss = dao.findBySql(sql, new Object[] { start });
-			// listss = dao.findBySql(sql, null);
 		} catch (ServiceException e) {
-			e.printStackTrace();
+			logger.error("查询C_ONLINEUSER_PRODUCT条件：start=" + start + ",indexs="
+					+ indexs + "异常！！");
 		}
 		return listss;
 	}
-
+//查询多月数据
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public List<List> getMonthData(Date start, Date end, List<Integer> indexs,
 			int period) {
@@ -802,17 +642,16 @@ public class OnlineServiceImpl implements OnlineService {
 		List listss = null;
 		try {
 			listss = dao.findBySql(sql, null);
-
 		} catch (ServiceException e) {
-
-			e.printStackTrace();
+			logger.error("查询C_ONLINEUSER_PRODUCT条件：start=" + start + ",end="
+					+ end + ",indexs=" + indexs + ",period=" + period + "异常！！");
 		}
 
 		return listss;
 	}
 
 	/*
-	 * 计算产品列
+	 * 获取表中不重复的产品名
 	 */
 	@SuppressWarnings({ "rawtypes" })
 	public List getLie() {
@@ -826,14 +665,14 @@ public class OnlineServiceImpl implements OnlineService {
 		String sql = sbf.toString();
 		try {
 			lists = dao.findBySql(sql, null);
-
 		} catch (ServiceException e) {
-
-			e.printStackTrace();
+			logger.error("查询C_ONLINEUSER_PRODUCT的T_PRODUCT_NAME异常！！");
 		}
 		return lists;
 	}
-
+	/*
+	 * 获取表中不重复的产品名以及产品id
+	 */
 	@SuppressWarnings({ "rawtypes" })
 	public List getProIdAndProName() {
 		// 全部集合
@@ -846,10 +685,8 @@ public class OnlineServiceImpl implements OnlineService {
 		String sql = sbf.toString();
 		try {
 			lists = dao.findBySql(sql, null);
-
 		} catch (ServiceException e) {
-
-			e.printStackTrace();
+			logger.error("查询C_ONLINEUSER_PRODUCT的T_PRODUCT_NAME，T_PRODUCT_NAME异常！！");
 		}
 		return lists;
 	}
